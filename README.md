@@ -27,7 +27,7 @@ Computational drug repositioning
 =================
 MBiRW is one novel computational method, which utilizes comprehensive similarity measures and Bi-Random walk algorithm to identify potential novel indications for a given drug.
 
-1.Dataset.
+Dataset.
 
 1) DrugSimMat and DiseaseSimMat store drug similarity matrix and disease similarity matrix, respectively;
 
@@ -40,14 +40,3 @@ MBiRW is one novel computational method, which utilizes comprehensive similarity
 5) For each disease pair, the number of their sharing common drugs is stored in shareWdd.mat;
 
 6) CDataSets store the combined datasets; Datasets_indep store the independent dataset.
-
-2.Code.
-1) normFun.m: function implementing normalization;
-
-2) setparFun.m: function analyzing similarity network;
-
-3) nManiCluester.m : function implementing cluster operation by calling cluster_one-1.0;
-
-4) MBiRW: predict potential indications for drugs; 
-
-All files of Dataset and Code should be stored in the same folder to run MBiRW.
