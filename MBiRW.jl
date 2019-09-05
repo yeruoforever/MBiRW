@@ -1,12 +1,12 @@
 using DelimitedFiles
 
 function Laplacian_normalization(M)
-    for i=1:size(M,1)
-        M[i,i]=sum(M[:,i])
+    for i = 1:size(M, 1)
+        M[i,i] = sum(M[:,i])
     end
-    for i ∈ 1:size(M,1)
-        for j ∈ 1:size(M,2)
-            M[i,j]=M[i,j]/sqrt(M[i,i]*M[j,j])
+    for i ∈ 1:size(M, 1)
+        for j ∈ 1:size(M, 2)
+            M[i,j] = M[i,j] / sqrt(M[i,i] * M[j,j])
         end
     end
     return M
@@ -33,12 +33,14 @@ function MBiRW(simR, simD, A, α, l, r)
     return RD
 end
 
-simR=readdlm("./Datasets/DrugSimMat")
-simD=readdlm("./Datasets/DiseaseSimMat")
-A=readdlm("./Datasets/DiDrAMat")
+simR = readdlm("./Datasets/DrugSimMat")
+simD = readdlm("./Datasets/DiseaseSimMat")
+A = readdlm("./Datasets/DiDrAMat")
 
-α=0.3
-l=2
-r=2
-RD=MBiRW(simR,simD,A,α,l,r)
-writedlm("myRDMat",RD)
+α = 0.3
+l = 2
+r = 2
+for α ∈ 0.1:0.1:0.9
+    RD = MBiRW(simR, simD, A, α, l, r)
+    writedlm(string(α) * "myRDMat", RD)
+end
