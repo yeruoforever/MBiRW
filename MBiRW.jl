@@ -40,10 +40,12 @@ A = readdlm("./Datasets/DiDrAMat")
 # α = 0.3
 l = 2
 r = 2
-for α ∈ 0.1:0.1:0.9
-    RD = MBiRW(simR, simD, A, α, l, r)
-    writedlm(string(α) * "JlRD.Mat", RD)
-end
+# for α ∈ 0.1:0.1:0.9
+#     RD = MBiRW(simR, simD, A, α, l, r)
+#     writedlm(string(α) * "JlRD.Mat", RD)
+# end
 
-data=readdlm("./0.3JlRD.Mat")
-println(sum(data))
+for α ∈ 0.1:0.1:0.9
+    data=readdlm((string(α) * "JlRD.Mat"))
+    println(α,"\t",sum(data))
+end
