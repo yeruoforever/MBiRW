@@ -45,5 +45,5 @@ for α ∈ 0.1:0.1:0.9
     writedlm(string(α) * "JlRD.Mat", RD)
 end
 
-data=readdlm("./0.3JlRDMat")
+data=readdlm("./0.3JlRD.Mat")
 println(sum(data))
