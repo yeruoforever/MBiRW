@@ -2,11 +2,11 @@ using DelimitedFiles
 
 function Laplacian_normalization(M)
     for i = 1:size(M, 1)
-        M[i,i] = sum(M[:,i])
+        M[i, i] = sum(M[i, :])
     end
     for i ∈ 1:size(M, 1)
         for j ∈ 1:size(M, 2)
-            M[i,j] = M[i,j] / sqrt(M[i,i] * M[j,j])
+            M[i, j] = M[i, j] / sqrt(M[i, i] * M[j, j])
         end
     end
     return M
@@ -37,10 +37,13 @@ simR = readdlm("./Datasets/DrugSimMat")
 simD = readdlm("./Datasets/DiseaseSimMat")
 A = readdlm("./Datasets/DiDrAMat")
 
-α = 0.3
+# α = 0.3
 l = 2
 r = 2
-for α ∈ 0.1:0.1:0.9
-    RD = MBiRW(simR, simD, A, α, l, r)
-    writedlm(string(α) * "myRDMat", RD)
-end
+# for α ∈ 0.1:0.1:0.9
+#     RD = MBiRW(simR, simD, A, α, l, r)
+#     writedlm(string(α) * "JlRDMat", RD)
+# end
+
+data=readdlm("./0.3JlRDMat")
+println(sum(data))
