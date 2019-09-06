@@ -44,7 +44,7 @@ a = 0.3
 # 执行
 RD = MBiRW(simR, simD, A, a, l, r)
 # 保持
-np.savetxt(str(a) + "PyRDMat", RD)
+np.savetxt(str(a) + "PyRD.Mat", RD)
 # 模型定义
 
 
