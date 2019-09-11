@@ -2,6 +2,7 @@ using DelimitedFiles
 using Random
 using Plots
 
+
 function Laplacian_normalization(M)
     for i = 1:size(M, 1)
         M[i, i] = sum(M[i, :])
@@ -35,32 +36,34 @@ function MBiRW(simR, simD, A, α, l, r)
     return RD
 end
 
-function part_of_test_indexs(indexs, fold, f_id)
-    h, w = size(indexs)
-    group_size = fld(w, fold)
-    if f_id == fold
-        return @view indexs[:, (f_id-1)*group_size+1:end]
-    else
-        return @view indexs[:, (f_id-1)*group_size+1:f_id*group_size]
-    end
-end
-
-function test_indexs(A::Matrix)
+function sampling_indexs(A::Matrix)
     h, w = size(A)
-    m = vcat([shuffle(Vector(1:w))' for i ∈ 1:h]...)
+    vcat([shuffle(1:w)' for i ∈ 1:h]...)
 end
 
-function train_matrix(A::Matrix, indexs)
+function sampling_group_indexs(s::Matrix, folds, id)
+    h, w = size(s)
+    group_size = fld(w, folds)
+    # if folds == id
+    #     return @view s[:, (id-1)*group_size+1:end]
+    # else
+    #     return @view s[:, ((id-1)*group_size+1:id*group_size)]
+    # end
+    @view s[:, (id-1)*group_size+1:id*group_size]
+end
+
+function train_matrix(A::Matrix, samplings)
     m = copy(A)
-    for i ∈ 1:size(A, 1)
-        for j ∈ indexs[i, :]
+    h, w = size(A)
+    for i ∈ 1:h
+        for j ∈ samplings[i, :]
             m[i, j] = 0
         end
     end
     m
 end
 
-function evalution_vector(outputs, sorted_outputs, labels, threshold)
+function evalution_vector(outputs, labels, threshold)
     pair = zip(outputs, labels)
     tp = sum(pair) do (pre, target)
         target == 1 && pre >= threshold
@@ -74,34 +77,46 @@ function evalution_vector(outputs, sorted_outputs, labels, threshold)
     tn = sum(pair) do (pre, target)
         target == 0 && pre < threshold
     end
-    (TP = tp, FN = fn, FP = fp, TN = tn)
+    [tp, fn, fp, tn]
 end
 
+function evalution_matrix(outputs, targets)
+    thresholds = sort(outputs)
+    hcat([evalution_vector(outputs, targets, threshold) for threshold ∈ thresholds]...)
+end
 
-function fold_cross(A::Matrix,α,l,r,fold = 10)
-    t_indexs = test_indexs(A)
-    for i ∈ 1:fold
-        indexs = part_of_test_indexs(t_indexs, fold, i)
-        ma = train_matrix(A, indexs)
-        rd = MBiRW(simR, simD, ma, α, l, r)
-        pre = [rd[k, j] for k ∈ 1:size(indexs, 1) for j ∈ indexs[k, :]]
-        thresholds = sort(pre)
-        labels = [A[k, j] for k ∈ 1:size(indexs, 1) for j ∈ indexs[k, :]]
-        p1 = plot(zeros(0))
-        p2 = plot(zeros(0))
-        for threshold in thresholds
-            em = evalution_vector(pre, thresholds, labels, threshold)
-            R = em.TP / (em.TP + em.FN)
-            P = em.TP / (em.TP + em.FP)
-            TPR = R
-            FPR = em.FP / (em.TN + em.FP)
-            push!(p1, (FPR, TPR))
-            push!(p2, (R, P))
-        end
-        display(plot(p1, p2, layout = (1, 2), legend = false))
+function PR_ROC(evalution::Matrix)
+    TP, FN, FP, TN = 1:4
+    p1 = plot(zeros(0))
+    p2 = plot(zeros(0))
+    for i = 1:size(evalution, 2)
+        ev = evalution[:, i]
+        P = ev[TP] / (ev[TP] + ev[FP])
+        R = ev[TP] / (ev[TP] + ev[FN])
+        TPR = R
+        FPR = ev[FP] / (ev[TN] + ev[FP])
+        push!(p1, (R, P))
+        push!(p2, (FPR, TPR))
     end
+    plot(p1, p2, layout = (1, 2), legend = false)
 end
 
+function fold_cross(simR, simD, A, α, l, r, folds = 10)
+    samplings = sampling_indexs(A)
+    group_size = fld(size(A, 2), folds)
+    ems = zeros(Int, 4, group_size * size(A, 1))
+    for fold ∈ 1:folds
+        sg = sampling_group_indexs(samplings, folds, fold)
+        tm = train_matrix(A, sg)
+        rw = MBiRW(simR, simD, tm, α, l, r)
+        h, w = size(sg)
+        outputs = [rw[i, j] for i ∈ 1:h for j ∈ sg[i, :]]
+        targets = [A[i, j] for i ∈ 1:h for j ∈ sg[i, :]]
+        em = evalution_matrix(outputs, targets)
+        ems += em
+    end
+    PR_ROC(ems)
+end
 
 simR = readdlm("./Datasets/DrugSimMat")
 simD = readdlm("./Datasets/DiseaseSimMat")
@@ -109,4 +124,4 @@ A = readdlm("./Datasets/DiDrAMat")
 α = 0.3
 l = 3
 r = 3
-fold_cross(A,α,l,r)
+fold_cross(simR, simD, A, α, l, r)
