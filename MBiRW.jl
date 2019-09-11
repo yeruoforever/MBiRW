@@ -81,7 +81,7 @@ function evalution_vector(outputs, labels, threshold)
 end
 
 function evalution_matrix(outputs, targets)
-    thresholds = sort(outputs)
+    thresholds = sort(outputs,rev=true)
     hcat([evalution_vector(outputs, targets, threshold) for threshold ∈ thresholds]...)
 end
 
@@ -89,6 +89,8 @@ function PR_ROC(evalution::Matrix)
     TP, FN, FP, TN = 1:4
     p1 = plot(zeros(0))
     p2 = plot(zeros(0))
+    AUC = 0
+    current_x, current_y = 0, 0
     for i = 1:size(evalution, 2)
         ev = evalution[:, i]
         P = ev[TP] / (ev[TP] + ev[FP])
@@ -97,8 +99,11 @@ function PR_ROC(evalution::Matrix)
         FPR = ev[FP] / (ev[TN] + ev[FP])
         push!(p1, (R, P))
         push!(p2, (FPR, TPR))
+        AUC += (FPR - current_x) * (current_y + TPR) / 2
+        current_x, current_y = FPR, TPR
     end
-    plot(p1, p2, layout = (1, 2), legend = false)
+    display(plot(p1, p2, layout = (1, 2), legend = false))
+    AUC
 end
 
 function fold_cross(simR, simD, A, α, l, r, folds = 10)
@@ -124,4 +129,5 @@ A = readdlm("./Datasets/DiDrAMat")
 α = 0.3
 l = 3
 r = 3
-fold_cross(simR, simD, A, α, l, r)
+AUC = fold_cross(simR, simD, A, α, l, r)
+println(AUC)
