@@ -81,14 +81,14 @@ function evalution_vector(outputs, labels, threshold)
 end
 
 function evalution_matrix(outputs, targets)
-    thresholds = sort(outputs,rev=true)
+    thresholds = sort(outputs, rev = true)
     hcat([evalution_vector(outputs, targets, threshold) for threshold ∈ thresholds]...)
 end
 
 function PR_ROC(evalution::Matrix)
     TP, FN, FP, TN = 1:4
-    p1 = plot(zeros(0),xlabel="Recall",ylabel="Precision")
-    p2 = plot(zeros(0),xlabel="FPR",ylabel="TPR")
+    p1 = plot(zeros(0), xlabel = "Recall", ylabel = "Precision")
+    p2 = plot(zeros(0), xlabel = "FPR", ylabel = "TPR")
     AUC = 0
     current_x, current_y = 0, 0
     for i = 1:size(evalution, 2)
