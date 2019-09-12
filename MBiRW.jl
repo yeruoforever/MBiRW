@@ -87,8 +87,8 @@ end
 
 function PR_ROC(evalution::Matrix)
     TP, FN, FP, TN = 1:4
-    p1 = plot(zeros(0))
-    p2 = plot(zeros(0))
+    p1 = plot(zeros(0),xlabel="Recall",ylabel="Precision")
+    p2 = plot(zeros(0),xlabel="FPR",ylabel="TPR")
     AUC = 0
     current_x, current_y = 0, 0
     for i = 1:size(evalution, 2)
