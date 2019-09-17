@@ -1,5 +1,7 @@
 using DelimitedFiles
 using Random
+using Printf
+@info("Importing Plots")
 using Plots
 
 
@@ -86,11 +88,13 @@ function evalution_matrix(outputs, targets)
 end
 
 function PR_ROC(evalution::Matrix)
+    @info("Computing P-R and ROC")
     TP, FN, FP, TN = 1:4
     p1 = plot(zeros(0), xlabel = "Recall", ylabel = "Precision")
     p2 = plot(zeros(0), xlabel = "FPR", ylabel = "TPR")
-    AUC = 0
-    current_x, current_y = 0, 0
+    PR_AUC, ROC_AUC = 0, 0
+    r, p = 0, 0
+    fpr, tpr = 0, 0
     for i = 1:size(evalution, 2)
         ev = evalution[:, i]
         P = ev[TP] / (ev[TP] + ev[FP])
@@ -99,11 +103,15 @@ function PR_ROC(evalution::Matrix)
         FPR = ev[FP] / (ev[TN] + ev[FP])
         push!(p1, (R, P))
         push!(p2, (FPR, TPR))
-        AUC += (FPR - current_x) * (current_y + TPR) / 2
-        current_x, current_y = FPR, TPR
+        ROC_AUC += (FPR - fpr) * (tpr + TPR) / 2
+        PR_AUC += (R - r) * (P + p) / 2
+        fpr, tpr = FPR, TPR
+        p, r = P, R
     end
+    title!(p1, "P-R AUC=" * @sprintf("%.3f",PR_AUC))
+    title!(p2, "ROC AUC=" * @sprintf("%.3f",ROC_AUC))
     display(plot(p1, p2, layout = (1, 2), legend = false))
-    AUC
+    (PR_AUC, ROC_AUC)
 end
 
 function fold_cross(simR, simD, A, α, l, r, folds = 10)
@@ -111,6 +119,7 @@ function fold_cross(simR, simD, A, α, l, r, folds = 10)
     group_size = fld(size(A, 2), folds)
     ems = zeros(Int, 4, group_size * size(A, 1))
     for fold ∈ 1:folds
+        @info("Ten fold cross : " * string(fold))
         sg = sampling_group_indexs(samplings, folds, fold)
         tm = train_matrix(A, sg)
         rw = MBiRW(simR, simD, tm, α, l, r)
@@ -122,12 +131,14 @@ function fold_cross(simR, simD, A, α, l, r, folds = 10)
     end
     PR_ROC(ems)
 end
-
-simR = readdlm("./Datasets/DrugSimMat")
-simD = readdlm("./Datasets/DiseaseSimMat")
-A = readdlm("./Datasets/DiDrAMat")
+@info("reading datas")
+@time simR = readdlm("./Datasets/DrugSimMat")
+@time simD = readdlm("./Datasets/DiseaseSimMat")
+@time A = readdlm("./Datasets/DiDrAMat")
 α = 0.3
 l = 3
 r = 3
-AUC = fold_cross(simR, simD, A, α, l, r)
+for i ∈1:5
+    AUC = fold_cross(simR, simD, A, α, l, r)
+end
 println(AUC)
